@@ -1,4 +1,8 @@
+import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import { Feature, PlacesResponse } from '../interfaces/places.interfaces';
+import { PlacesApiClient } from '../api';
+import { MapService } from './map.service';
 
 @Injectable({
   providedIn: 'root'
@@ -7,12 +11,17 @@ import { Injectable } from '@angular/core';
 export class PlacesService {
 
   public userLocation?: [number, number]
+  public isLoadingPlaces: boolean = false
+  public places: Feature[] = []
 
   get isUserLocationReady(): boolean {
     return !!this.userLocation
   }
 
-  constructor() {
+  constructor(
+    private placesApi: PlacesApiClient,
+    private mapService: MapService
+  ) {
     this.getUserLocation()
   }
 
@@ -22,7 +31,7 @@ export class PlacesService {
         resolve(this.userLocation)
       } else {
         navigator.geolocation.getCurrentPosition(
-          ({coords}) => {
+          ({ coords }) => {
             this.userLocation = [coords.longitude, coords.latitude]
             resolve(this.userLocation)
           },
@@ -38,6 +47,33 @@ export class PlacesService {
         )
       }
     })
+  }
+
+  getPlacesByQuery(query: string): void {
+    if (query.length === 0 || !this.userLocation) {
+      this.places = []
+      this.isLoadingPlaces = false
+      return
+    }
+
+    this.isLoadingPlaces = true
+
+    this.placesApi.get<PlacesResponse>(`/${query}.json`, {
+      params: {
+        proximity: this.userLocation?.join(','),
+      }
+    })
+      .subscribe(response => {
+        this.places = response.features
+        this.isLoadingPlaces = false
+        this.mapService.createMarkersFromPlaces(this.places, this.userLocation)
+      })
+
+  }
+
+  clearPlaces() {
+    this.places = []
+    this.isLoadingPlaces = false
   }
 
 }
