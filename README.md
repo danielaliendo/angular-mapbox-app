@@ -1,5 +1,7 @@
 # AngularMapboxApp
 
+## Live [demo](https://649050ee73a33f60dfc9e66e--superb-phoenix-4c72dd.netlify.app/)
+
 This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 16.1.0-next.2.
 
 ## Development server
